@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
+import { supabase } from "../lib/supbase";
 import "@/styles/signup.css";
 
 export function SignupPage() {
@@ -110,18 +111,48 @@ export function SignupPage() {
     return isValid;
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  
+const [signupMessage, setSignupMessage] = useState("");
+const [isSigningUp, setIsSigningUp] = useState(false);
 
-    if (!validateForm()) {
+const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+  setSignupMessage("");
+
+  if (!validateForm()) {
+    return;
+  }
+
+  setIsSigningUp(true);
+
+  try {
+    const { data, error } = await supabase.auth.signUp({
+      email: email.trim(),
+      password,
+      options: {
+        data: {
+          full_name: name.trim(),
+        },
+      },
+    });
+
+    if (error) {
+      setSignupMessage(error.message);
       return;
     }
 
-    // Keep your existing route exactly the same
-    navigate({
-      to: "/verify-otp",
-    });
-  };
+    if (data.session) {
+      await navigate({ to: "/dashboard" });
+    } else {
+      await navigate({ to: "/verify-otp" });
+    }
+  } catch {
+    setSignupMessage("Something went wrong. Please try again.");
+  } finally {
+    setIsSigningUp(false);
+  }
+};
+
 
   const handlePasswordChange = (
     value: string
@@ -530,12 +561,20 @@ export function SignupPage() {
               </span>
             )}
 
+            
+{signupMessage && (
+  <p role="alert" className="field-error">
+    {signupMessage}
+  </p>
+)}
+  
+
             {/* VERIFY */}
             <button
               type="submit"
               className="verify-button"
             >
-              <span>Verify</span>
+              <span>{isSigningUp ? "Creating account..." : "Verify"}</span>
               <span className="verify-arrow">
                 →
               </span>
