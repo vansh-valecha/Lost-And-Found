@@ -1,9 +1,31 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { supabase } from "../lib/supbase";
 import { BottomNav } from "@/components/BottomNav";
 import { exampleItems, type LostFoundItem } from "@/data/items";
 import "@/styles/dashboard.css";
 
 export function DashboardPage() {
+  const [checkingLogin, setCheckingLogin] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+
+    supabase.auth.getSession().then(({ data, error }) => {
+      if (!active) return;
+
+      if (error || !data.session) {
+        window.location.href = "/";
+      } else {
+        setCheckingLogin(false);
+      }
+    });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+   
   const [items] = useState<LostFoundItem[]>(exampleItems);
 
   const [activeType, setActiveType] =

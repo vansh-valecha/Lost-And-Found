@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 
 import { BottomNav } from "@/components/BottomNav";
+import { supabase } from "@/lib/supbase";
 import "@/styles/profile.css";
 
 /* =========================================================
@@ -387,16 +388,17 @@ export function ProfilePage() {
   /* =======================================================
      LOGOUT
      ======================================================= */
+async function handleLogout() {
+  const { error } = await supabase.auth.signOut();
 
-  function handleLogout() {
-    setModal(null);
+  if (error) {
+    console.error("Logout failed:", error.message);
+    return;
+  }
 
-    /*
-     * Later, when Supabase Auth is connected,
-     * replace this with:
-     *
-     * await supabase.auth.signOut();
-     */
+  setModal(null);
+
+  
 
     navigate({
       to: "/",
